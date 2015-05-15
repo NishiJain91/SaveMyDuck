@@ -24,6 +24,7 @@
 			var forceFactor=0.3;
 			var mouseDown=false;
 			var balls=new Array();
+			var duckSave;
 			var mousePos=new Array();
 
 		//Event Handler
@@ -74,7 +75,7 @@
 
 				return color;
 			}
-			function arrow(fromx,fromy,tox,toy,c){
+			/*function arrow(fromx,fromy,tox,toy,c){
 				ctx.beginPath();
 				var headLength=10;
 				var angle=Math.atan2(toy-fromy,tox-fromx);
@@ -88,7 +89,7 @@
 				ctx.lineWidth=1;
 				ctx.lineCap="butt";
 				ctx.stroke();
-			}
+			}*/
 			function drawball(){
 				this.vy+=gravity*0.1;
 				this.x+=this.vx*0.1;
@@ -113,6 +114,20 @@
 				//TODO: resolve and check the colision from the ball
 				circle(this.x,this.y,this.r,this.c);
 			}
+			var img = new Image();
+
+			function drawduck(){
+				ctx.beginPath();
+				this.duckx+=1;
+				/*if(this.duckx+50>canvas.width){
+					this.duckx-=1;
+				}
+				if(this.duckx-50<0){
+					this.duckx+=1;
+				}*/
+				ctx.drawImage(img,this.duckx,this.ducky,50,50); // Or at 
+				img.src = this.image;
+			}
 
 		//Objects
 
@@ -127,25 +142,39 @@
 
 				this.draw=drawball;
 			}
+			function duck(positionX,positionY,velocityX,velocityY,image){
+				this.duckx=positionX;
+				this.ducky=positionY;
+				this.duckvx=velocityX;
+				this.duckvy=velocityY;
+				this.image=image;
+
+				this.draw=drawduck;
+			}
 		//Game loop
 			function game_loop(){
 				ctx.clearRect(0,0,canvas.width,canvas.height);
 				if(mouseDown){
+					//TODO: Shot the ball.
+
 					//TODO: Draw an arrow
-					arrow(mousePos['downX'],mousePos['downY'],mousePos['currentX'],mousePos['currentY'],random_color());
+					/*arrow(mousePos['downX'],mousePos['downY'],mousePos['currentX'],mousePos['currentY'],random_color());*/
 				}
+				duckSave.draw();
 				for(var i=0;i<balls.length;i++){
 					balls[i].draw();
 				}
+				
 				ctx.fillStyle="#000000";
 				ctx.font="15px Arial";
-				ctx.fillText("Balls: "+balls.length,10,canvas.height-10);
+				ctx.fillText("Balls: "+balls.length,10,20);
 			}
 		//Lets Go!
 			function init(){
 				ctx=$('#canvas')[0].getContext('2d');
 				canvas.width=$(window).width();
 				canvas.height=$(window).height();
+				duckSave=new duck(50,canvas.height-50,1,0,'images/duck.png');
 				return setInterval(game_loop,10);
 			}
 			init();
