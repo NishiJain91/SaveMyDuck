@@ -13,7 +13,9 @@
 		}
 		canvas{
 			display: block;
+			cursor: url('images/cursor.png')37 36, auto;
 		}
+
 	</style>
 	<script type="text/javascript" src="bower_components/jquery/dist/jquery.min.js"></script>
 	<script>
@@ -25,23 +27,30 @@
 			var mouseDown=false;
 			var balls=new Array();
 			var duckSave;
+			var directionOfDuck=0;
+			var points=5000;
 			var mousePos=new Array();
 
 		//Event Handler
 			function onMouseDown(evt){
-				mouseDown=true;
+				//TODO: Shot the ball.
+				for(var i=0;i<balls.length;i++){
+					checkBlast(balls[i],i,evt);
+				}
+				/*mouseDown=true;
 				mousePos['downX']=evt.pageX;
-				mousePos['downY']=evt.pageY;
+				mousePos['downY']=evt.pageY;*/
+			}
+			function checkBlast(ball,i,evt){
+				if(Math.pow((evt.pageX - ball.x),2) + Math.pow((evt.pageY - ball.y),2) < Math.pow(ball.r,2)){
+					ball.c="#000";
+					balls.splice(i,1);
+				}
 			}
 
-			function onMouseUp(evt){
-				mouseDown=false;
-				balls.push(new ball(mousePos["downX"],mousePos["downY"],(evt.pageX-mousePos["downX"])*forceFactor,(evt.pageY-mousePos["downY"])*forceFactor,(5+Math.random()*10),0.9,random_color()));
-			}
-
-			function onMouseMove(evt){
+			function onMouseMove(evt){/*
 				mousePos['currentX']=evt.pageX;
-				mousePos['currentY']=evt.pageY;
+				mousePos['currentY']=evt.pageY;*/
 			}
 
 			function resizeWindow(evt){
@@ -50,8 +59,8 @@
 			}
 
 			$(document).mousedown(onMouseDown);
-			$(document).mouseup(onMouseUp);
-			$(document).mousemove(onMouseMove);
+			//$(document).mouseup(onMouseUp);
+			//$(document).mousemove(onMouseMove);
 			$(window).bind("resize",resizeWindow);
 		//Graphics Code
 			function circle(x,y,r,c){
@@ -60,6 +69,7 @@
 				ctx.closePath();
 				ctx.fillStyle=c;
 				ctx.fill();
+
 				//stroke styles
 				ctx.lineWidth=r*0.1;
 				ctx.strokeStyle="#000000";
@@ -118,15 +128,22 @@
 
 			function drawduck(){
 				ctx.beginPath();
-				this.duckx+=1;
-				/*if(this.duckx+50>canvas.width){
-					this.duckx-=1;
+				this.duckx+=this.duckvx*0.1;
+				if(this.duckx+75>canvas.width){
+					this.duckvx*=-1;
+					directionOfDuck=1;
 				}
 				if(this.duckx-50<0){
-					this.duckx+=1;
-				}*/
-				ctx.drawImage(img,this.duckx,this.ducky,50,50); // Or at 
-				img.src = this.image;
+					this.duckvx*=-1;
+					directionOfDuck=0;
+				}
+				if(directionOfDuck==0){
+					img.src = "images/duck0.png";
+				}else{
+					img.src = "images/duck1.png";
+				}
+				ctx.drawImage(img,this.duckx,this.ducky,75,75); // Or at 
+				
 			}
 
 		//Objects
@@ -142,12 +159,11 @@
 
 				this.draw=drawball;
 			}
-			function duck(positionX,positionY,velocityX,velocityY,image){
+			function duck(positionX,positionY,velocityX,velocityY){
 				this.duckx=positionX;
 				this.ducky=positionY;
 				this.duckvx=velocityX;
 				this.duckvy=velocityY;
-				this.image=image;
 
 				this.draw=drawduck;
 			}
@@ -155,7 +171,6 @@
 			function game_loop(){
 				ctx.clearRect(0,0,canvas.width,canvas.height);
 				if(mouseDown){
-					//TODO: Shot the ball.
 
 					//TODO: Draw an arrow
 					/*arrow(mousePos['downX'],mousePos['downY'],mousePos['currentX'],mousePos['currentY'],random_color());*/
@@ -167,15 +182,22 @@
 				
 				ctx.fillStyle="#000000";
 				ctx.font="15px Arial";
-				ctx.fillText("Balls: "+balls.length,10,20);
+				ctx.fillText("Score: "+getPoints()/1000,10,20);
 			}
 		//Lets Go!
+		function getPoints(){
+			points=points-1;
+			return Math.round(points*balls.length*1000);
+		}
 			function init(){
 				ctx=$('#canvas')[0].getContext('2d');
 				canvas.width=$(window).width();
 				canvas.height=$(window).height();
-				duckSave=new duck(50,canvas.height-50,1,0,'images/duck.png');
-				return setInterval(game_loop,10);
+				for(var i=75;i<=canvas.width;i=i+(canvas.width/6)){
+				balls.push(new ball(i,50,(Math.random()*100+20)*forceFactor,(Math.random()*100-20)*forceFactor,(20+Math.random()*30),0.9,random_color()));
+				}
+				duckSave=new duck(50,canvas.height-75,25,0);
+				return setInterval(game_loop,20);
 			}
 			init();
 	}
