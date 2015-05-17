@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title>Ball In Hall</title>
+	<title>Save My Duck</title>
 	<style>
 	*{
 		margin:0;
@@ -14,12 +14,52 @@
 		canvas{
 			display: block;
 			cursor: url('images/cursor.png')37 36, auto;
+			-webkit-user-select: none;
+			-moz-user-select: none;
+			-o-user-select: none;
+			user-select: none;
 		}
+		.count::selection{
+			background: transparent;
+		}
+		.count {
 
+			font-size: 15em;
+			bottom: auto;
+			top: 20%;
+			color: rgba(255, 0,0, 0.5);
+			pointer-events: none;
+			position: absolute;
+			bottom: 40px;
+			width: 100%;
+			font-family: sans-serif;
+			text-align: center;
+		}
 	</style>
 	<script type="text/javascript" src="bower_components/jquery/dist/jquery.min.js"></script>
 	<script>
 	window.onload=function(){
+		// RequestAnimFrame: a browser API for getting smooth animations
+	window.requestAnimFrame = (function(){
+		return  window.requestAnimationFrame       || 
+			window.webkitRequestAnimationFrame || 
+			window.mozRequestAnimationFrame    || 
+			window.oRequestAnimationFrame      || 
+			window.msRequestAnimationFrame     ||  
+			function( callback ){
+				return window.setTimeout(callback, 1000 / 60);
+			};
+	})();
+
+	window.cancelRequestAnimFrame = ( function() {
+		return window.cancelAnimationFrame          ||
+			window.webkitCancelRequestAnimationFrame    ||
+			window.mozCancelRequestAnimationFrame       ||
+			window.oCancelRequestAnimationFrame     ||
+			window.msCancelRequestAnimationFrame        ||
+			clearTimeout
+	} )();
+
 		//Global Elements
 			var ctx;
 			var gravity=4;
@@ -28,8 +68,11 @@
 			var balls=new Array();
 			var duckSave;
 			var directionOfDuck=0;
-			var points=5000;
+			var counter=0;
 			var mousePos=new Array();
+
+			W = window.innerWidth, // Window's width
+			H = window.innerHeight; // Window's height
 
 		//Event Handler
 			function onMouseDown(evt){
@@ -40,12 +83,6 @@
 				/*mouseDown=true;
 				mousePos['downX']=evt.pageX;
 				mousePos['downY']=evt.pageY;*/
-			}
-			function checkBlast(ball,i,evt){
-				if(Math.pow((evt.pageX - ball.x),2) + Math.pow((evt.pageY - ball.y),2) < Math.pow(ball.r,2)){
-					ball.c="#000";
-					balls.splice(i,1);
-				}
 			}
 
 			function onMouseMove(evt){/*
@@ -62,6 +99,52 @@
 			//$(document).mouseup(onMouseUp);
 			//$(document).mousemove(onMouseMove);
 			$(window).bind("resize",resizeWindow);
+		//Controller functions
+		
+			function checkBlast(ball,i,evt){
+				if(Math.pow((evt.pageX - ball.x),2) + Math.pow((evt.pageY - ball.y),2) < Math.pow(ball.r,2)){
+					ball.c="#f00";
+					setTimeout(function(){
+						balls.splice(i,1);
+						setPoint();
+					},200);
+					
+				}
+			}
+
+			function getPoints(){
+				return counter;
+			}
+			function setPoint(){
+				counter+=10;
+			}	
+			function collision(){
+				for(i=0;i<balls.length;i++){
+					if (DuckBallColliding(balls[i],duckSave)==true) {
+					gameOver();
+					}
+				}
+				
+			}
+			function ballgenerator(){
+				for(var i=75;i<=canvas.width;i=i+(canvas.width/5)){
+				balls.push(new ball(i,50,(Math.random()*100+20)*forceFactor,(Math.random()*100-20)*forceFactor,(20+Math.random()*30),0.9,random_color()));
+				}
+			}
+			function DuckBallColliding(circle,rect){
+				var distX = Math.abs(circle.x - rect.duckx-rect.width/2)+15;
+				var distY = Math.abs(circle.y - rect.ducky-rect.height/2)+15;
+
+				if (distX > (rect.width/2 + circle.r)) { return false; }
+				if (distY > (rect.height/2 + circle.r)) { return false; }
+
+				if (distX <= (rect.width/2)) { return true; } 
+				if (distY <= (rect.height/2)) { return true; }
+
+				var dx=distX-rect.width/2;
+				var dy=distY-rect.height/2;
+				return (dx*dx+dy*dy<=(circle.r*circle.r));
+			}
 		//Graphics Code
 			function circle(x,y,r,c){
 				ctx.beginPath();
@@ -85,21 +168,7 @@
 
 				return color;
 			}
-			/*function arrow(fromx,fromy,tox,toy,c){
-				ctx.beginPath();
-				var headLength=10;
-				var angle=Math.atan2(toy-fromy,tox-fromx);
-				ctx.moveTo(fromx,fromy);
-				ctx.lineTo(tox,toy);
-				ctx.lineTo(tox-headLength*Math.cos(angle-Math.PI/6),toy-headLength*Math.sin(angle-Math.PI/6));
-				ctx.moveTo(tox,toy);
-				ctx.lineTo(tox-headLength*Math.cos(angle+Math.PI/6),toy-headLength*Math.sin(angle+Math.PI/6));
-				ctx.closePath();
-				ctx.fillStyle=c;
-				ctx.lineWidth=1;
-				ctx.lineCap="butt";
-				ctx.stroke();
-			}*/
+
 			function drawball(){
 				this.vy+=gravity*0.1;
 				this.x+=this.vx*0.1;
@@ -121,7 +190,6 @@
 					this.y=this.r;
 					this.vy*=-1*this.b;
 				}
-				//TODO: resolve and check the colision from the ball
 				circle(this.x,this.y,this.r,this.c);
 			}
 			var img = new Image();
@@ -129,7 +197,7 @@
 			function drawduck(){
 				ctx.beginPath();
 				this.duckx+=this.duckvx*0.1;
-				if(this.duckx+75>canvas.width){
+				if(this.duckx+this.width>canvas.width){
 					this.duckvx*=-1;
 					directionOfDuck=1;
 				}
@@ -142,7 +210,7 @@
 				}else{
 					img.src = "images/duck1.png";
 				}
-				ctx.drawImage(img,this.duckx,this.ducky,75,75); // Or at 
+				ctx.drawImage(img,this.duckx,this.ducky,this.width,this.height); // Or at 
 				
 			}
 
@@ -159,53 +227,92 @@
 
 				this.draw=drawball;
 			}
-			function duck(positionX,positionY,velocityX,velocityY){
+			function duck(positionX,positionY,velocityX,velocityY,width,height){
 				this.duckx=positionX;
 				this.ducky=positionY;
 				this.duckvx=velocityX;
 				this.duckvy=velocityY;
+				this.width=width;
+				this.height=height;
 
 				this.draw=drawduck;
 			}
 		//Game loop
 			function game_loop(){
 				ctx.clearRect(0,0,canvas.width,canvas.height);
-				if(mouseDown){
-
-					//TODO: Draw an arrow
-					/*arrow(mousePos['downX'],mousePos['downY'],mousePos['currentX'],mousePos['currentY'],random_color());*/
-				}
 				duckSave.draw();
 				for(var i=0;i<balls.length;i++){
 					balls[i].draw();
 				}
-				
-				ctx.fillStyle="#000000";
-				ctx.font="15px Arial";
-				ctx.fillText("Score: "+getPoints()/1000,10,20);
+				collision();
+				ctx.fillStlye = "white";
+				ctx.font = "20px Arial, sans-serif";
+				ctx.textAlign = "center";
+				ctx.textBaseline = "middle";
+				ctx.fillText("Score: "+getPoints(),W/2,50);
 			}
 		//Lets Go!
-		function getPoints(){
-			points=points-1;
-			return Math.round(points*balls.length*1000);
-		}
-			function init(){
+
 				ctx=$('#canvas')[0].getContext('2d');
 				canvas.width=$(window).width();
 				canvas.height=$(window).height();
-				for(var i=75;i<=canvas.width;i=i+(canvas.width/6)){
-				balls.push(new ball(i,50,(Math.random()*100+20)*forceFactor,(Math.random()*100-20)*forceFactor,(20+Math.random()*30),0.9,random_color()));
-				}
-				duckSave=new duck(50,canvas.height-75,25,0);
-				return setInterval(game_loop,20);
-			}
-			init();
-	}
-		
+				
+				duckSave=new duck(50,canvas.height-75,20,0,75,75);
 
+			function animloop() {
+				init = requestAnimFrame(animloop);
+				game_loop();
+			}
+			animloop();
+
+			function gameOver() {
+				ctx.fillStlye = "white";
+				ctx.font = "60px Arial, sans-serif";
+				ctx.textAlign = "center";
+				ctx.textBaseline = "middle";
+				ctx.fillText("Game Over - You scored "+getPoints()+" points!", W/2, H/2 + 25 );
+
+				// Stop the Animation
+				cancelRequestAnimFrame(init);
+			}
+			(function(){     
+    var sec = 5;  
+    var id = window.setInterval(function() { 
+        switch(sec){
+        	case 0: 
+        			$('.count').html("Duck <(*)");
+        			break;
+        	case 1:
+        			$('.count').html("Save");
+        			break;
+        	case 2:
+        			$('.count').html("Let's");
+        			break;
+        	case 3:
+        	case 4:
+        	case 5:
+        	$('.count').html(sec);
+        	break;		
+
+        }
+        if (sec < 0) {
+            clearInterval(id);
+            $('.count').hide();
+            ballgenerator();
+            window.setInterval(function(){
+            	ballgenerator();
+            },5000);
+            return;
+        }        
+         sec--;
+    }, 1000)
+})();
+
+}			
 	</script>
 </head>
 <body>
 <canvas id="canvas"></canvas>
+<div id="js-count" class="count"></div>
 </body>
 </html>
