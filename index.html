@@ -68,13 +68,16 @@
 			var forceFactor=0.3;
 			var mouseDown=false;
 			var balls=new Array();
-			var duckSave;
 			var directionOfDuck=0;
 			var counter=0;
 			var mousePos=new Array();
 			var shootSound = document.createElement('audio');
 			shootSound.setAttribute('src', 'sounds/gun.mp3');
-			shootSound.setAttribute('autoplay', 'autoplay');
+			var backgroundSound = document.createElement('audio');
+			backgroundSound.setAttribute('src','sounds/background.mp3');
+			backgroundSound.setAttribute('loop','loop');
+			backgroundSound.play();
+
 
 			W = window.innerWidth, // Window's width
 			H = window.innerHeight; // Window's height
@@ -280,6 +283,7 @@
 				ctx.fillText("Game Over - You scored "+getPoints()+" points!", W/2, H/2 + 25 );
 
 				// Stop the Animation
+				backgroundSound.pause();
 				cancelRequestAnimFrame(init);
 			}
 			(function(){     
