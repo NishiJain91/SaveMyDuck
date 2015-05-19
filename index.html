@@ -13,6 +13,8 @@
 		}
 		canvas{
 			display: block;
+			background:url('images/background.jpg');
+			background-size: cover;
 			cursor: url('images/cursor.png')37 36, auto;
 			-webkit-user-select: none;
 			-moz-user-select: none;
@@ -70,6 +72,9 @@
 			var directionOfDuck=0;
 			var counter=0;
 			var mousePos=new Array();
+			var shootSound = document.createElement('audio');
+			shootSound.setAttribute('src', 'sounds/gun.mp3');
+			shootSound.setAttribute('autoplay', 'autoplay');
 
 			W = window.innerWidth, // Window's width
 			H = window.innerHeight; // Window's height
@@ -77,9 +82,11 @@
 		//Event Handler
 			function onMouseDown(evt){
 				//TODO: Shot the ball.
+				shootSound.play();
 				for(var i=0;i<balls.length;i++){
 					checkBlast(balls[i],i,evt);
 				}
+
 				/*mouseDown=true;
 				mousePos['downX']=evt.pageX;
 				mousePos['downY']=evt.pageY;*/
