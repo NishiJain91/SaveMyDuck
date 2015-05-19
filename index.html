@@ -103,6 +103,8 @@
 			function resizeWindow(evt){
 				canvas.height=$(window).height();
 				canvas.width=$(window).width();
+				duckSave.ducky=canvas.height-75;
+				duckSave.draw();
 			}
 
 			$(document).mousedown(onMouseDown);
@@ -209,9 +211,11 @@
 				this.duckx+=this.duckvx*0.1;
 				if(this.duckx+this.width>canvas.width){
 					this.duckvx*=-1;
+					this.duckx=canvas.width-75;
 					directionOfDuck=1;
 				}
 				if(this.duckx-50<0){
+					this.duckx=50;
 					this.duckvx*=-1;
 					directionOfDuck=0;
 				}
