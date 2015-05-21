@@ -135,7 +135,7 @@
 							my = evt.pageY;
 					
 					// Click start button
-					if(mx >= startBtn.x && mx <= startBtn.x + startBtn.w) {
+					if(mx >= startBtn.x && mx <= startBtn.x + startBtn.w && my >= startBtn.y && my <= startBtn.y + startBtn.h) {
 						duckSave=new duck(50,canvas.height-75,20,0,75,75);
 						backgroundSound.play();
 						(function(){     
@@ -179,7 +179,7 @@
 					
 					// If the game is over, and the restart button is clicked
 					if(over == 1) {
-						if(mx >= restartBtn.x && mx <= restartBtn.x + restartBtn.w) {
+						if(mx >= restartBtn.x && mx <= restartBtn.x + restartBtn.w && my >= restartBtn.y && my <= restartBtn.y + restartBtn.h) {
 							balls=[];
 							points=0;
 							directionOfDuck=0;
