@@ -25,7 +25,6 @@
 			background: transparent;
 		}
 		.count {
-
 			font-size: 15em;
 			bottom: auto;
 			top: 20%;
@@ -36,6 +35,10 @@
 			width: 100%;
 			font-family: sans-serif;
 			text-align: center;
+			text-shadow: 0px 3px 0px #b2a98f,
+    					0px 14px 10px rgba(0,0,0,0.15),
+    					0px 24px 2px rgba(0,0,0,0.1),
+    					0px 34px 30px rgba(0,0,0,0.1);
 		}
 	</style>
 	<script type="text/javascript" src="bower_components/jquery/dist/jquery.min.js"></script>
@@ -64,6 +67,8 @@
 
 		//Global Elements
 			var ctx;
+			var isPaused = false;
+			var level=1;
 			var gravity=4;
 			var forceFactor=0.3;
 			var mouseDown=false;
@@ -71,6 +76,7 @@
 			var directionOfDuck=0;
 			var over=0;
 			var points=0;
+			var lifes=3;
 			var mousePos=new Array();
 			var startBtn = {}; // Start button object
 			var restartBtn = {}; // Restart button object
@@ -79,7 +85,10 @@
 			var backgroundSound = document.createElement('audio');
 			backgroundSound.setAttribute('src','sounds/background.mp3');
 			backgroundSound.setAttribute('loop','loop');
-
+			
+			// minimum and maximum ball limits.
+			var minBall=2;
+			var rangeBall=4;
 
 			W = window.innerWidth, // Window's width
 			H = window.innerHeight; // Window's height
@@ -92,16 +101,22 @@
 				y: H/2 - 25,
 
 				draw: function() {
+					ctx.save();
 					ctx.strokeStyle = "black";
 					ctx.lineWidth = "4";
 					ctx.fillStyle="white";
+					ctx.shadowColor = "black";
+					ctx.shadowOffsetX = 5; 
+					ctx.shadowOffsetY = 5; 
+					ctx.shadowBlur = 6;
 					ctx.fillRect(this.x, this.y, this.w, this.h);
-					ctx.strokeRect(this.x, this.y, this.w, this.h);
+					ctx.strokeRect(this.x, this.y, this.w, this.h);					
 					ctx.font = "20px Arial, sans-serif";
 					ctx.textAlign = "center";
 					ctx.textBaseline = "middle";
 					ctx.fillStyle = "#000";
 					ctx.fillText("Start", W/2, H/2 );
+					ctx.restore();
 				}
 			};
 
@@ -113,22 +128,30 @@
 				y: H/2 - 50,
 
 				draw: function() {
-					ctx.beginPath();
+					ctx.save();
 					ctx.strokeStyle = "black";
 					ctx.lineWidth = "4";
 					ctx.fillStyle="white";
-					ctx.strokeRect(this.x, this.y, this.w, this.h);
+					ctx.shadowColor = "black";
+					ctx.shadowOffsetX = 5; 
+					ctx.shadowOffsetY = 5; 
+					ctx.shadowBlur = 6;
 					ctx.fillRect(this.x, this.y, this.w, this.h);
+					ctx.strokeRect(this.x, this.y, this.w, this.h);
 					ctx.font = "20px Arial, sans-serif";
 					ctx.textAlign = "center";
 					ctx.textBaseline = "middle";
 					ctx.fillStyle = "#000";
 					ctx.fillText("Restart", W/2, H/2 - 25 );
+					ctx.restore();
 				}
 			};
 		//Event Handler
 			function onMouseDown(evt){
 				//TODO: Shot the ball.
+				if(isPaused){
+					return;
+				}
 				shootSound.play();
 					// Variables for storing mouse position on click
 					var mx = evt.pageX,
@@ -187,6 +210,11 @@
 							backgroundSound.play();
 							animloop();
 							over = 0;
+							level=1;
+							lifes=3;
+							minBall=2
+							rangeBall=4;
+							forceFactor=0.3;
 						}
 					}
 					for(var i=0;i<balls.length;i++){
@@ -211,6 +239,11 @@
 			}
 
 			$(document).mousedown(onMouseDown);
+			$(document).keydown(function(e){
+				if(e.keyCode==32){
+					isPaused=!isPaused;
+				}
+			})
 			//$(document).mouseup(onMouseUp);
 			//$(document).mousemove(onMouseMove);
 			$(window).bind("resize",resizeWindow);
@@ -226,23 +259,32 @@
 					
 				}
 			}
-
-			function getPoints(){
-				return points;
-			}
 			function setPoint(){
 				points+=10;
 			}	
 			function collision(){
 				for(i=0;i<balls.length;i++){
 					if (DuckBallColliding(balls[i],duckSave)==true) {
-					gameOver();
+						balls.splice(i,1);
+						lifes--;
+						if(lifes==0){
+							gameOver();
+						}
 					}
 				}
 				
 			}
+			function definelevel(){
+				if(points/200-level==0){
+					level++;
+					lifes+=2;
+					forceFactor+=0.05;
+					minBall+=1;
+					rangeBall+=1;
+				}
+			}
 			function ballgenerator(){
-				for(var i=75;i<=canvas.width;i=i+(canvas.width/Math.round(Math.random()*2+4))){
+				for(var i=75;i<=canvas.width;i=i+(canvas.width/Math.round(Math.random()*minBall+rangeBall))){
 				balls.push(new ball(i,50,(Math.random()*100+20)*forceFactor,(Math.random()*100-20)*forceFactor,(20+Math.random()*30),0.9,random_color()));
 				}
 			}
@@ -262,15 +304,21 @@
 			}
 		//Graphics Code
 			function circle(x,y,r,c){
-				ctx.fillStyle=c;
+				
+				var gradient = ctx.createRadialGradient(x, y, 5, x, y, r+10);
+				gradient.addColorStop(0, 'white');
+				gradient.addColorStop(1, c);4
+				ctx.fillStyle=gradient;
 				ctx.beginPath();
 				ctx.arc(x,y,r,0,2*Math.PI,true);
-				ctx.closePath();
+				
 				ctx.fill();
+				ctx.closePath();
+				
 
 				//stroke styles
 				ctx.lineWidth=r*0.1;
-				ctx.strokeStyle="#000000";
+				ctx.strokeStyle=c;
 				ctx.stroke();
 			}
 
@@ -362,11 +410,26 @@
 					balls[i].draw();
 				}
 				collision();
-				ctx.fillStlye = "white";
-				ctx.font = "20px Arial, sans-serif";
+				definelevel();
+				ctx.save();
+				ctx.fillStyle = "black";
+				ctx.font = "30px Arial, sans-serif";
 				ctx.textAlign = "center";
 				ctx.textBaseline = "middle";
-				ctx.fillText("Score: "+getPoints(),W/2,50);
+				ctx.shadowColor = "black";
+				ctx.shadowOffsetX = 5; 
+				ctx.shadowOffsetY = 5; 
+				ctx.shadowBlur = 6;
+				ctx.textBaseline = 'alphabetic';
+				ctx.scale(1,1);
+				ctx.fillText("Score: "+points,W/2,50);
+				for(var i=0;i<lifes;i++){
+					var duckLife=new duck(W/2-50+i*40,70,0,0,40,40);
+					duckLife.draw();
+				}
+				ctx.fillStyle = "black";
+				ctx.fillText("Level: "+level,80,50);
+				ctx.restore();
 			}
 		//Lets Go!
 
@@ -375,17 +438,28 @@
 				canvas.height=$(window).height();
 				
 			function animloop() {
-				console.log("check");
 				init = requestAnimFrame(animloop);
-				game_loop();
+				if(!isPaused){
+					game_loop();
+				}
 			}
+				
+			
 			startBtn.draw();
 			function gameOver() {
+				ctx.save();
+				ctx.beginPath();
 				ctx.font = "40px Arial, sans-serif";
 				ctx.textAlign = "center";
 				ctx.textBaseline = "middle";
-				ctx.fillText("Game Over - You scored "+getPoints()+" points!", W/2, H/2 + 25 );
-
+				ctx.shadowColor = "black";
+				ctx.shadowOffsetX = 5; 
+				ctx.shadowOffsetY = 5; 
+				ctx.shadowBlur = 6;
+				ctx.textBaseline = 'alphabetic';
+				ctx.scale(1,1);
+				ctx.fillText("Game Over - You scored "+points+" points!", W/2, H/2 + 50 );
+				ctx.restore();
 				// Stop the Animation
 				backgroundSound.pause();
 				cancelRequestAnimFrame(init);
