@@ -283,6 +283,15 @@
 				}
 
 				$(document).mousedown(onMouseDown);
+
+				$(window).blur(function() {
+					isPaused=true;
+				});
+
+				$(window).focus(function() {
+					isPaused=false;
+				});
+				
 				$(document).keydown(function(e){
 					if(over){
 						return;
